@@ -233,7 +233,9 @@ class GraphUnconditionalDiffusionForecaster(GraphDiffusionForecaster):
             metadata=metadata,
             supporting_arrays=supporting_arrays,
         )
-
+        self.training_approach = getattr(
+            config.training, "training_approach", "probabilistic_low_noise"
+        )
         self.rho = config.model.model.diffusion.rho
         rank_zero_info("[DEBUG] : Je passe dans graph unconditional diffusion dans diffusionforecasetr.py")
 
@@ -323,16 +325,36 @@ class GraphUnconditionalDiffusionForecaster(GraphDiffusionForecaster):
 
     def _get_noise_level(
         self,
-        shape,
-        sigma_max,
-        sigma_min,
-        sigma_data,
-        rho,
-        device,
-    ):
-        rnd_uniform = torch.rand(shape, device=device)
-        sigma = (sigma_max ** (1.0 / rho)
-                 + rnd_uniform * (sigma_min ** (1.0 / rho) - sigma_max ** (1.0 / rho))) ** rho
+        shape: torch.shape,
+        sigma_max: float,
+        sigma_min: float,
+        sigma_data: float,
+        rho: float,
+        device: torch.device,
+    ) -> tuple[torch.Tensor]:
+
+        if self.training_approach == "probabilistic_high_noise":
+            rnd_uniform = torch.rand(shape, device=device)
+            sigma = (
+                sigma_max ** (1.0 / rho)
+                + rnd_uniform * (sigma_min ** (1.0 / rho) - sigma_max ** (1.0 / rho))
+            ) ** rho
+
+        elif self.training_approach == "probabilistic_low_noise":
+            log_sigma = torch.normal(
+                mean=self.lognormal_mean,
+                std=self.lognormal_std,
+                size=shape,
+                device=device,
+            )
+            sigma = torch.exp(log_sigma)
+        elif self.training_approach == "deterministic":
+            sigma = torch.full(
+                shape,
+                fill_value=5000.0,
+                device=device,
+            )
+
         weight = (sigma**2 + sigma_data**2) / (sigma * sigma_data) ** 2
         return sigma, weight
 

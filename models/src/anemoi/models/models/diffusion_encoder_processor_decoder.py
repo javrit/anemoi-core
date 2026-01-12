@@ -535,7 +535,7 @@ class AnemoiDiffusionModelEncProcDec(BaseGraphModel):
 
         sampler_cls = diffusion_samplers.DIFFUSION_SAMPLERS[actual_sampler]
         sampler_instance = sampler_cls(dtype=sigmas.dtype, **diffusion_sampler_config)
-
+        # print("DEBUG: sample dans diff_enc_proc_dec / fin epoch", x)
         return sampler_instance.sample(
             x,
             y_init,

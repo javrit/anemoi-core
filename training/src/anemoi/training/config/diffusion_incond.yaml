@@ -74,7 +74,7 @@ model:
 hardware:
   paths:
     data: /project/home/p200177/DE_371/datasets/arome-an-oper-titan-0p025-2020-2024-1h-v4-eurw-precip6/arome-an-oper-titan-0p025-2020-2024-1h-v4-eurw-precip6
-    output: /project/home/p200177/DE_371/angeliquebonamy/anemoi/outputs_incond_x_0/
+    output: /project/home/p200177/DE_371/angeliquebonamy/anemoi/outputs_incond_x_0_probabilistic_low_noise/
   files:
     dataset: arome-an-oper-titan-0p025-2020-2024-1h-v4-eurw-precip6.zarr
     graph: /project/home/p200177/DE_371/avritj/graph_AROME_full.pt
@@ -82,7 +82,7 @@ hardware:
   num_gpus_per_model: 2
   # num_nodes: 2
 training:
-  max_epochs: 20
+  max_epochs: 500
   model_task: anemoi.training.train.tasks.GraphUnconditionalDiffusionForecaster
-
+  training_approach: probabilistic_low_noise
 

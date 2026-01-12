@@ -261,6 +261,8 @@ class EDMHeunSampler(DiffusionSampler):
                 y = y + (sigma_next - sigma_effective) * (d + d_prime) / 2
             else:
                 y = y_next
+                
+        # print("DEBUG: sample dans diff_sampler edmheuner / fin epoch", x)
 
         return y
 
