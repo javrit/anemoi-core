@@ -17,7 +17,6 @@ from torch_geometric.data import HeteroData
 
 from anemoi.models.preprocessing import Processors
 from anemoi.utils.config import DotDict
-from anemoi.utils.config import load_config
 
 class AnemoiModelInterface(torch.nn.Module):
     """An interface for Anemoi models.
@@ -136,6 +135,7 @@ class AnemoiModelInterface(torch.nn.Module):
         torch.Tensor
             Predicted data.
         """
+
         # Prepare kwargs for model's predict_step
         predict_kwargs = {
             "batch": batch,
@@ -144,11 +144,22 @@ class AnemoiModelInterface(torch.nn.Module):
             "multi_step": self.multi_step,
             "model_comm_group": model_comm_group,
         }
-
+        
+        kwargs = {
+            "params_inference" : {
+            'sigma_max': 100.0, 
+            'sigma_min': 0.00, 
+            'rho': 7.0, 
+            'num_steps': 50, 
+            'num_steps_sdedit': 20, 
+            'SDEdit': False
+        }
+        }
         # Add tendency processors if they exist
         if hasattr(self, "pre_processors_tendencies"):
             predict_kwargs["pre_processors_tendencies"] = self.pre_processors_tendencies
         if hasattr(self, "post_processors_tendencies"):
             predict_kwargs["post_processors_tendencies"] = self.post_processors_tendencies
 
+        # Delegate to the model's predict_step implementation with processors
         return self.model.predict_step(**predict_kwargs, **kwargs)

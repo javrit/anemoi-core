@@ -8,8 +8,7 @@
 # nor does it submit to any jurisdiction.
 
 from __future__ import annotations
-
-from lightning_utilities.core.rank_zero import rank_zero_info
+from pytorch_lightning.utilities.rank_zero import rank_zero_info
 import numpy as np 
 import logging
 from typing import TYPE_CHECKING
@@ -18,7 +17,6 @@ import torch
 from torch.utils.checkpoint import checkpoint
 
 from .forecaster import GraphForecaster
-from lightning_utilities.core.rank_zero import rank_zero_info
 
 if TYPE_CHECKING:
     from collections.abc import Generator
@@ -61,7 +59,6 @@ class GraphDiffusionForecaster(GraphForecaster):
         self.rho = config.model.model.diffusion.rho
 
     def forward(self, x: torch.Tensor, y_noised: torch.Tensor, sigma: torch.Tensor) -> torch.Tensor:
-
         return self.model.model.fwd_with_preconditioning(
             x,
             y_noised,
@@ -98,8 +95,6 @@ class GraphDiffusionForecaster(GraphForecaster):
         torch.Tensor
             Computed loss with noise weighting applied
         """
-        # np.save('y_pred.npy',y_pred)
-        # np.save('y.npy',y)
 
         return self.loss(
             y_pred,
@@ -136,7 +131,7 @@ class GraphDiffusionForecaster(GraphForecaster):
             Loss value, metrics, and predictions (per step)
 
         """
-        # start rollout of preprocessed batch:  x contient les données historiques ou d’entrée (multi-step, variables passées, etc.).
+        # start rollout of preprocessed batch
         x = batch[
             :,
             0 : self.multi_step,
@@ -185,7 +180,7 @@ class GraphDiffusionForecaster(GraphForecaster):
                 use_reentrant=False,
             )
 
-            x = self.advance_input(x, y_pred, batch, rollout_step) #sert à préparer le batch d'entrée pour le prochain pas temporel lors d'un rollout (prédiction future en fonction du passé et du présent)
+            x = self.advance_input(x, y_pred, batch, rollout_step) 
 
             yield loss, metrics_next, y_pred
 
@@ -202,6 +197,7 @@ class GraphDiffusionForecaster(GraphForecaster):
         rho: float,
         device: torch.device,
     ) -> tuple[torch.Tensor]:
+        print("sinon on passe dans graph normal ?")
         rnd_uniform = torch.rand(shape, device=device)
         sigma = (sigma_max ** (1.0 / rho) + rnd_uniform * (sigma_min ** (1.0 / rho) - sigma_max ** (1.0 / rho))) ** rho
         weight = (sigma**2 + sigma_data**2) / (sigma * sigma_data) ** 2
@@ -239,13 +235,11 @@ class GraphUnconditionalDiffusionForecaster(GraphDiffusionForecaster):
             config.training, "training_approach", "probabilistic_low_noise"
         )
         self.rho = config.model.model.diffusion.rho
-        
-        rank_zero_info("[DEBUG] : unconditional diffusion ")
-
-    # -------------------------------------------------------------------------
-    # FORWARD : identical to conditional version
-    # -------------------------------------------------------------------------
-    def forward(self, x: torch.Tensor, y_noised: torch.Tensor, sigma: torch.Tensor) -> torch.Tensor:
+       
+    def forward(self, x: torch.Tensor, y_noised: torch.Tensor, sigma: torch.Tensor) :#-> torch.Tensor:
+        print("on passe bien la dedans ? forward")
+        rank_zero_info("shape x dans diff forecaster ", x.shape)
+        rank_zero_info("shape de y ", y_noised.shape)
         return self.model.model.fwd_with_preconditioning(
             x,
             y_noised,
@@ -255,9 +249,6 @@ class GraphUnconditionalDiffusionForecaster(GraphDiffusionForecaster):
         )
 
 
-    # -------------------------------------------------------------------------
-    # UNCONDITIONAL ROLLOUT — NO MULTISTEP
-    # -------------------------------------------------------------------------
     def rollout_step(
         self,
         batch: torch.Tensor,
@@ -274,13 +265,11 @@ class GraphUnconditionalDiffusionForecaster(GraphDiffusionForecaster):
         # Ground-truth output (only the target step, no multistep)
         y = batch[:, 0, ..., self.data_indices.data.output.full]
         x = torch.zeros(
-            (y.shape[0], self.multi_step, *y.shape[1:-1], nvars_input),
+            (y.shape[0], 1, *y.shape[1:-1], nvars_input),
             device=y.device,
             dtype=y.dtype,
         )
-        # np.save('y_batched.npy',y.cpu())
-        
-
+        print("on apsse bien la dedans ? rollout step ?")
         # Sample noise level
         sigma, noise_weights = self._get_noise_level(
             shape=(x.shape[0],) + (1,) * (x.ndim - 2),
@@ -293,18 +282,9 @@ class GraphUnconditionalDiffusionForecaster(GraphDiffusionForecaster):
 
         # Add noise
         eps = torch.randn_like(y)
-        # y_noised = self._noise_target(y, sigma)
 
         y_noised = y + sigma * eps
 
-        # ---------------------------------------------------------------------
-        # Create unconditional dummy x
-        # ---------------------------------------------------------------------
-        # Shape expected by fwd:
-        #   (batch, multi_step, ens, nodes, n_input_vars)
-
-
-        # Forward pass
         y_pred = self(x, y_noised, sigma)
             # Use checkpoint for compute_loss_metrics
         loss, metrics_next = checkpoint(
@@ -316,13 +296,11 @@ class GraphUnconditionalDiffusionForecaster(GraphDiffusionForecaster):
                 weights=noise_weights,
                 use_reentrant=False,
             )
+
+        x = self.advance_input(x, y_pred, batch, rollout)
         
-
-
         yield loss, metrics_next, y_pred
-
-
-    # -------------------------------------------------------------------------
+        
     def _noise_target(self, x: torch.Tensor, sigma: torch.Tensor) -> torch.Tensor:
         return x + torch.randn_like(x) * sigma
 

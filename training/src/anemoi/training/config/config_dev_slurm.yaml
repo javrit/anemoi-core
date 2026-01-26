@@ -1,12 +1,12 @@
 defaults:
-- data: zarr #to change to our own config
+- data: zarr_bon #to change to our own config
 - dataloader: native_grid #to change to our own config
-- diagnostics: evaluation
+- diagnostics: enrichment
 - datamodule: single
 - hardware: example
 - graph: existing_graph
 - model: graphtransformer_diffusionuncond
-- training: diffusion
+- training: diffusion_uncond
 - _self_
 
 # set to true to switch on config validation
@@ -26,8 +26,8 @@ diagnostics:
       enabled: False
       entity: "none"
 data:
-    diagnostic: ["tp"] #variables que le modÃ¨le ne prendra pas en input mais va sortir en output : tp est la pluie, on ne la prend pas en input 
-    # Ã§a peut perturber en input les variables et tout le modne fait comme Ã§a.
+    diagnostic: ["tp"] #variables que le modèle ne prendra pas en input mais va sortir en output : tp est la pluie, on ne la prend pas en input 
+    # ça peut perturber en input les variables et tout le modne fait comme ça.
     forcing:
       - "cos_latitude"
       - "cos_longitude"
@@ -67,9 +67,6 @@ dataloader:
       training: 1
       validation: 1
       test: 1
-    # num_workers:
-    #   training: 4
-    #   validation: 4
 model:
   model:
     _target_: anemoi.models.models.AnemoiDiffusionModelEncProcDecUnconditional
@@ -77,16 +74,17 @@ model:
 hardware:
   paths:
     data: /project/home/p200177/DE_371/datasets/arome-an-oper-titan-0p025-2020-2024-1h-v4-eurw-precip6/arome-an-oper-titan-0p025-2020-2024-1h-v4-eurw-precip6
-    output: /project/home/p200177/DE_371/avritj/
-    # output: /project/home/p200177/DE_371/angeliquebonamy/anemoi/test_gpu/
-    # checkpoints: /project/home/p200177/DE_371/angeliquebonamy/anemoi/outputs_incond_x_0_ddterministic/checkpoint/5e62bb9c61a84f74985391a6bd6c4628/last.ckpt
+    output: /project/home/p200177/DE_371/avritj/experiments_anemoi/
   files:
     dataset: arome-an-oper-titan-0p025-2020-2024-1h-v4-eurw-precip6.zarr
     graph: /project/home/p200177/DE_371/avritj/graph_AROME_full.pt
-  num_gpus_per_node: 16
+  num_gpus_per_node: 4
   num_gpus_per_model: 2
   num_nodes: 1
 training:
-  max_epochs: 500
+  # Set max_epochs or max_steps. Training stops at the first limit reached.
+  max_epochs: 150
+  max_steps: 1000000
   model_task: anemoi.training.train.tasks.GraphUnconditionalDiffusionForecaster
-  training_approach: deterministic
+
+
