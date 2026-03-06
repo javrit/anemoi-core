@@ -15,6 +15,10 @@ defaults:
 # set to true to switch on config validation
 config_validation: False
 diagnostics:
+3diagnostics:
+  plot:
+    callbacks: []
+
   log:
     mlflow:
       enabled: False 
@@ -109,8 +113,8 @@ hardware:
 
   files:
     dataset: arome-an-oper-titan-0p025-2020-2024-1h-v4-eurw-precip6.zarr
-    graph: /project/home/p200177/DE_371/avritj/multi_scale_res9.pt
-    # graph: /project/home/p200177/DE_371/avritj/graph_AROME_full.pt
+    # graph: /project/home/p200177/DE_371/angeliquebonamy/anemoi/graph/test/multi_scale.pt
+    graph: /project/home/p200177/DE_371/avritj/graph_AROME_full.pt
     # graph: /project/home/p200177/DE_371/angeliquebonamy/anemoi/graph/graph_AROME_full.pt
 
   num_gpus_per_node: 4
