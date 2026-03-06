@@ -271,36 +271,9 @@ class GraphUnconditionalDiffusionForecaster(GraphDiffusionForecaster):
         - No rollout loop
         - Single-step prediction from noisy target
         """
-        # print('VALIDATION_MODE', validation_mode)
         nvars_input = len(self.data_indices.data.input.full)
-        # Ground-truth output (only the target step, no multistep)
-
-
-        # if validation_mode:
-        #     ('JE PASSE DANS VALIDATION')
-
-        #     y = torch.randn_like(
-        #     batch[:, 0, ..., self.data_indices.data.output.full]
-        #     )
-        #     x = torch.zeros(
-        #         (y.shape[0], self.multi_step, *y.shape[1:-1], nvars_input),
-        #         device=y.device,
-        #         dtype=y.dtype,
-        #     )
-        #     sigma, noise_weights = self._get_noise_level(
-        #         shape=(x.shape[0],) + (1,) * (x.ndim - 2),
-        #         sigma_max=self.model.model.sigma_max,
-        #         sigma_min=self.model.model.sigma_min,
-        #         sigma_data=self.model.model.sigma_data,
-        #         rho=self.rho,
-        #         device=y.device,
-        #     )
-        #     eps = torch.randn_like(y)
-        #     y_noised = y + sigma * eps
-        #     y_pred = self(x, y_noised, sigma)
 
         
-        # y = batch[:, 0, ..., 0:4]
         y= batch[:, 0, ..., self.data_indices.data.output.full]
 
         x= torch.zeros(
@@ -308,25 +281,8 @@ class GraphUnconditionalDiffusionForecaster(GraphDiffusionForecaster):
                 device=y.device,
                 dtype=y.dtype,
             )
-        # print ("JE SUIS LES 79 ? SHAPES", y.shape,x.shape)
-        # x = batch[:, 0:self.multi_step, ..., 4]  # shape: [1, 2, 1, 332840]
-        # # print(x_)
-        # x = x.unsqueeze(-1).repeat(1, 1, 1, 1, nvars_input) # shape: [1, 2, 1, 332840, 78]
-        # null_embedding = nn.Parameter(torch.randn(1, nvars_input))
 
-        # print('null_embedding je suis', null_embedding.shape, null_embedding)
-        print('X_size',x.shape)
-        # print('forcing',self.data_indices.data.input.full, self.config.data.forcing,self.data_indices.model.input.forcing, len(['10u', '10v', '2d', '2t', 'msl', 'sp', 'skt', 'z', 'tp', 'q_50', 'q_100', 'q_150', 'q_200', 'q_250', 'q_300', 'q_400', 'q_500', 'q_700', 'q_850', 'q_925', 'q_1000', 't_50', 't_100', 't_150', 't_200', 't_250', 't_300', 't_400', 't_500', 't_700', 't_850', 't_925', 't_1000', 'u_50', 'u_100', 'u_150', 'u_200', 'u_250', 'u_300', 'u_400', 'u_500', 'u_700', 'u_850', 'u_925', 'u_1000', 'v_50', 'v_100', 'v_150', 'v_200', 'v_250', 'v_300', 'v_400', 'v_500', 'v_700', 'v_850', 'v_925', 'v_1000', 'z_50', 'z_100', 'z_150', 'z_200', 'z_250', 'z_300', 'z_400', 'z_500', 'z_700', 'z_850', 'z_925', 'z_1000', 'lsm', 'insolation', 'cos_julian_day', 'cos_latitude', 'cos_local_time', 'cos_longitude', 'sin_julian_day', 'sin_latitude', 'sin_local_time', 'sin_longitude']))
-        # # x = batch[
-        #     :,
-        #     0 : self.multi_step,
-        #     ...,
-        #     self.data_indices.data.input.full,
-        # ] 
-            # np.save('y_batched.npy',y.cpu())
-            
-        # print("x stats", x.min().item(), x.max().item(), x.abs().sum().item())
-            # Sample noise level
+ 
         sigma, noise_weights = self._get_noise_level(
                 shape=(x.shape[0],) + (1,) * (x.ndim - 2),
                 sigma_max=self.model.model.sigma_max,
@@ -340,36 +296,21 @@ class GraphUnconditionalDiffusionForecaster(GraphDiffusionForecaster):
         eps = torch.randn_like(y)
         y_noised = self._noise_target(y, sigma)
 
-            # y_noised = y + sigma * eps
-
-            # ---------------------------------------------------------------------
-            # Create unconditional dummy x
-            # ---------------------------------------------------------------------
-            # Shape expected by fwd:
-            #   (batch, multi_step, ens, nodes, n_input_vars)
-
-
-            # Forward pass
         y_pred = self( x,y_noised, sigma)
-            # Use checkpoint for compute_loss_metrics
-        # if validation_mode:
-        #     sigma2 = sigma * 2.0
-        #     y_pred_2 = self(x, y_noised, sigma2)
 
-        #     diff = (y_pred - y_pred_2).abs().mean().item()
-            # print("[TEST sigma] mean |y_pred - y_pred_2| =", diff,sigma)
+        #changement de version de torch : 
+        def loss_wrapper(y_pred,y, rollout, validation_mode):
+            return self.compute_loss_metrics(y_pred,y,rollout,validation_mode,weights=noise_weights)
         loss, metrics_next = checkpoint(
-                self.compute_loss_metrics,
+                loss_wrapper,
                 y_pred,
                 y,
                 rollout,
                 validation_mode,
-                weights=noise_weights,
                 use_reentrant=False,
             )
         
         # print('DEBUG TEST POUR la prédiction shape et sigma', x.shape,y_pred.shape, sigma, y_pred.max())
-        # print(x)  
 
         yield loss, metrics_next, y_pred
 

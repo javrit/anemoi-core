@@ -319,6 +319,7 @@ class AnemoiProfiler(AnemoiTrainer):
                 self.config.dataloader.read_group_size,
                 1,
             )
+        print('JE PASSE DANS LE DATAMODULE, FILE PROFILER.PY')
         return datamodule
 
     @cached_property

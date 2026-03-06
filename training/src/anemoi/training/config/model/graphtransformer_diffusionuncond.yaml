@@ -23,7 +23,7 @@ model:
     inference_defaults:
       noise_scheduler:
         schedule_type: "karras"
-        sigma_max: 100.0
+        sigma_max: 10000.0
         sigma_min: 0.02
         rho: 7.0
         num_steps: 50
