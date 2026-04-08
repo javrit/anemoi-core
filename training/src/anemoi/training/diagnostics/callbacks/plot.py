@@ -1152,7 +1152,8 @@ class PlotSampleUnconditionalDiffusion(BasePlotAdditionalMetrics):
 
         local_rank = pl_module.local_rank
         rollout = getattr(pl_module, "rollout", 0)
-        print('DANS PLOT rollout',rollout)
+        print('DANS PLOT rollout',rollout, self.colormaps, self.precip_and_related_fields)
+        
         for rollout_step in range(rollout):
             fig = plot_predicted_multilevel_flat_sample_unconditional(
                 parameters = plot_parameters_dict,

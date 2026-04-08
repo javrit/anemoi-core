@@ -1,66 +1,74 @@
----
 overwrite: True
-
-data: "data"
-hidden: "hidden"
-
+data: data
+hidden: hidden
+ 
 nodes:
   # Data nodes
   data:
     node_builder:
-      _target_: anemoi.graphs.nodes.AnemoiDatasetNodes # options: AnemoiDatasetNodes, NPZFileNodes
-      dataset: ${dataloader.dataset}
-    attributes: ${graph.attributes.nodes}
+      _target_: anemoi.graphs.nodes.AnemoiDatasetNodes # à laisser comme ça : c'est ce qu'on doit utiliser.
+      dataset:
+        - dataset: /project/home/p200177/DE_371/datasets/arome-an-oper-titan-0p025-2020-2024-1h-v4-eurw-precip6/arome-an-oper-titan-0p025-2020-2024-1h-v4-eurw-precip6/arome-an-oper-titan-0p025-2020-2024-1h-v4-eurw-precip6.zarr #une fois qu'on aura accès au vrai dataset, l'utiliser
+    attributes:
+      area_weight:
+        _target_: anemoi.graphs.nodes.attributes.PlanarAreaWeights
+        norm: unit-max # options: l1, l2, unit-max, unit-sum, unit-std
+
   # Hidden nodes
   hidden:
     node_builder:
-      _target_: anemoi.graphs.nodes.TriNodes # options: AnemoiDatasetNodes, NPZFileNodes, TriNodes
-      resolution: 5 # grid resolution for npz (o32, o48, ...)
-    attributes: ${graph.attributes.nodes}
-
+      _target_: anemoi.graphs.nodes.LimitedAreaTriNodes #autre possibilité ;
+      resolution: 8 # res10 = res arome ia d'après eliott
+      reference_node_name: data
 edges:
 # Encoder configuration
-- source_name: ${graph.data}
-  target_name: ${graph.hidden}
+- source_name: data
+  target_name: hidden
   edge_builders:
-  - _target_: anemoi.graphs.edges.CutOffEdges # options: KNNEdges, CutOffEdges
-    cutoff_factor: 0.6 # only for cutoff method
-    source_mask_attr_name: null
-    target_mask_attr_name: null
-  attributes: ${graph.attributes.edges}
-  # Processor configuration
-- source_name: ${graph.hidden}
-  target_name: ${graph.hidden}
-  edge_builders:
-  - _target_: anemoi.graphs.edges.MultiScaleEdges
-    x_hops: 1
-    scale_resolutions: ${graph.nodes.hidden.node_builder.resolution}
-    source_mask_attr_name: null
-    target_mask_attr_name: null
-  attributes: ${graph.attributes.edges}
-  # Decoder configuration
-- source_name: ${graph.hidden}
-  target_name: ${graph.data}
-  edge_builders:
-  - _target_: anemoi.graphs.edges.KNNEdges # options: KNNEdges, CutOffEdges
-    num_nearest_neighbours: 3 # only for knn method
-    source_mask_attr_name: null
-    target_mask_attr_name: null
-  attributes: ${graph.attributes.edges}
+    # - _target_: anemoi.graphs.edges.KNNEdges # options: KNNEdges, CutOffEdges
+    #   num_nearest_neighbours: 12 # only for knn method
 
-
-attributes:
-  nodes:
-    area_weight:
-      _target_: anemoi.graphs.nodes.attributes.SphericalAreaWeights # options: Area, Uniform
-      norm: unit-max # options: l1, l2, unit-max, unit-sum, unit-std
-      fill_value: 0
-  edges:
+    - _target_: anemoi.graphs.edges.CutOffEdges #recommandé pour l'encodeur pour ne pas laisser des noeuds des data dans le vide
+      cutoff_factor: 1 #présent dans la config d'eliott, et sur la doc anemoi-graph. A confirmer, regarder combien de noeuds dans data sont laissés isolés ?
+  attributes:
+    edge_length:
+      _target_: anemoi.graphs.edges.attributes.EdgeLength #classique sur la doc et sur les configs de anemoi-mf
+      norm: unit-std
+    edge_dirs:
+      _target_: anemoi.graphs.edges.attributes.EdgeDirection #classique sur la doc et sur les configs de anemoi-mf
+      norm: unit-std
+  # Processor configuration
+- source_name: hidden
+  target_name: hidden
+  edge_builders:
+  - _target_: anemoi.graphs.edges.MultiScaleEdges #essayer de mettre anemoi.graphs.edges.MultiScaleEdges avec x hop = 1 et voir scale resolution (à définir)
+    x_hops: 1 #=1 permet d'avoir tous les hidden to hidden avec une seule connexion
+    scale_resolutions: 8
+  attributes:
     edge_length:
       _target_: anemoi.graphs.edges.attributes.EdgeLength
       norm: unit-std
     edge_dirs:
       _target_: anemoi.graphs.edges.attributes.EdgeDirection
       norm: unit-std
+  # Decoder configuration
+- source_name: hidden
+  target_name: data
+  edge_builders:
+  - _target_: anemoi.graphs.edges.KNNEdges # options: KNNEdges, CutOffEdges #utilsié dans le papier sur BRIS
+    num_nearest_neighbours: 3 # only for knn method, utilisé dans BRIS de cette manière là
+  attributes:
+    edge_length:
+      _target_: anemoi.graphs.edges.attributes.EdgeLength
+      norm: unit-std
+    edge_dirs:
+      _target_: anemoi.graphs.edges.attributes.EdgeDirection
+      norm: unit-std
+#####METTRE UN SKIP CONNECTION ???
+# - source_name: data
+#   target_name: out
 
-post_processors: []
+post_processors:
+  - _target_: anemoi.graphs.processors.RemoveUnconnectedNodes
+    nodes_name: data
+    save_mask_indices_to_attr: indices_connected_nodes # optional

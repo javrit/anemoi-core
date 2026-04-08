@@ -479,6 +479,8 @@ def plot_flat_sample_unconditional(
     precip_and_related_fields: list | None = None,
     cmap: Colormap | None = None,
 ) -> None:
+    print('JE PASSE PAR PLOT_FLAT_SAMPLE', example.shape, lon.shape,lat.shape)
+
     """Plot a "flat" 1D sample.
 
     Data on non-rectangular (reduced Gaussian) grids.

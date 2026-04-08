@@ -1,4 +1,5 @@
 num_channels: 1024
+# num_channels: 768
 cpu_offload: False
 
 keep_batch_sharded: True
@@ -11,16 +12,18 @@ model:
     sigma_data: 1.0
     noise_channels: 32
     noise_cond_dim: 16
-    sigma_max: 10000.0
+    sigma_max: 1000.0
     sigma_min: 0.02
-    log_normal_mean: -1.2
-    log_normal_std: 1.2
+    log_normal_mean: 0
+    log_normal_std: 3.5
     rho: 7.0
     noise_embedder:
       _target_: anemoi.models.layers.diffusion.SinusoidalEmbeddings
       num_channels: ${model.model.diffusion.noise_channels}
       max_period: 1000
     inference_defaults:
+      conditioning: 
+        condition: "null" # ['mean', 'null', 'orography']
       noise_scheduler:
         schedule_type: "karras"
         sigma_max: 100.0
@@ -56,6 +59,17 @@ layer_kernels:
     _target_: anemoi.models.layers.normalization.AutocastLayerNorm
     bias: False
 
+# processor:
+#   _target_: anemoi.models.layers.processor.GraphTransformerProcessor
+#   trainable_size: ${model.trainable_parameters.hidden2hidden}
+#   sub_graph_edge_attributes: ${model.attributes.edges}
+#   num_layers: 16
+#   num_chunks: 8
+#   mlp_hidden_ratio: 4 # GraphTransformer or Transformer only
+#   num_heads: 16 # GraphTransformer or Transformer only
+#   qk_norm: True
+#   cpu_offload: ${model.cpu_offload}
+#   layer_kernels: ${model.layer_kernels}
 processor:
   _target_: anemoi.models.layers.processor.GraphTransformerProcessor
   trainable_size: ${model.trainable_parameters.hidden2hidden}
@@ -104,6 +118,12 @@ trainable_parameters:
   hidden2data: 8
   hidden2hidden: 8 # GNN and GraphTransformer Processor only
 
+# trainable_parameters:
+#   data: 0
+#   hidden: 0
+#   data2hidden: 0
+#   hidden2data: 0
+#   hidden2hidden: 0 
 
 attributes:
   edges:

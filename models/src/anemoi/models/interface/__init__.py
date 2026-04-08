@@ -146,10 +146,10 @@ class AnemoiModelInterface(torch.nn.Module):
         }
         kwargs = {
         "params_inference" : {
-        'sigma_max': 100.0,
+        'sigma_max': 20.0,
         'sigma_min': 0.02,
         'rho': 7,
-        'num_steps': 50,
+        'num_steps': 100,
         'num_steps_sdedit': 17,
         'SDEdit': False
         }
