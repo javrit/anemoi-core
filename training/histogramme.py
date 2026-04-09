@@ -19,14 +19,14 @@ from itertools import combinations_with_replacement
 # ── Config ─────────────────────────────────────────────────────────────────────
 
 ZARR_PATH = '/project/home/p200177/DE_371/datasets/arome-an-oper-titan-0p025-2020-2024-1h-v4-eurw-precip6/arome-an-oper-titan-0p025-2020-2024-1h-v4-eurw-precip6/arome-an-oper-titan-0p025-2020-2024-1h-v4-eurw-precip6.zarr'
-NETCDF_DIR  = '/project/home/p200177/DE_371/angeliquebonamy/anemoi/inferences/netcdf_runner2/'          # dossier contenant les fichiers *.nc fake
+NETCDF_DIR  = '/project/home/p200177/DE_371/angeliquebonamy/anemoi/inferences/final_training/'          # dossier contenant les fichiers *.nc fake
 OUTPUT_DIR  = './'
 
 VARS_TO_USE = ['10u', '10v', '2t']
 
 DATE_START  = np.datetime64('2024-04-02')
 DATE_END    = np.datetime64('2024-10-03')
-N_SAMPLES   = 500
+N_SAMPLES   = 50
 CHUNK       = 20    # nb de dates par chunk (ajuster selon RAM)
 N_BINS      = 100
 N_LEVELS    = 15
