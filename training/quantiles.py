@@ -7,6 +7,7 @@ import netCDF4 as nc
 import glob
 from tqdm import tqdm
 
+######################################################### PLOT AROME ###################################################
 
 # DOSSIER = '/project/home/p200177/DE_371/angeliquebonamy/anemoi/inferences/quantiles'
 
@@ -15,7 +16,7 @@ from tqdm import tqdm
 # ds = zarr.open(ZARR_PATH, mode='r')
 # dates = ds['dates'][:]  # array de datetime64
 
-# # Filtrer les dates voulues
+# # Filtrer les dates (TEST TRAIN)
 # date_start = np.datetime64('2024-04-02')
 # date_end   = np.datetime64('2024-10-03')
 
@@ -23,8 +24,8 @@ from tqdm import tqdm
 # indices_disponibles = np.where(mask)[0]
 # print(f"{len(indices_disponibles)} dates disponibles dans l'intervalle")
 
-# # Tirer 500 dates aléatoires parmi celles disponibles
-# n_samples = min(500, len(indices_disponibles))  # au cas où il y en a moins de 500
+# # Tirer 500 dates 
+# n_samples = min(500, len(indices_disponibles))  #  il y en a moins de 500
 # np.random.seed(42)
 # indices_dates = np.random.choice(indices_disponibles, size=n_samples, replace=False)
 # indices_dates.sort()
@@ -80,50 +81,56 @@ from tqdm import tqdm
 
 
 
-# DOSSIER = '/project/home/p200177/DE_371/angeliquebonamy/anemoi/inferences/netcdf_runner2'
+NETCDF ='/project/home/p200177/DE_371/avritj/experiments_anemoi/inference/netcdf_full_training_angelique'
+DOSSIER='/project/home/p200177/DE_371/angeliquebonamy/anemoi/inferences/final_training/scores_190K_steps'
+# Trouver tous les .nc
+fichiers = sorted(glob.glob(f'{NETCDF}/*.nc'))
+print(f"{len(fichiers)} fichiers trouvés")
 
-# # Trouver tous les .nc
-# fichiers = sorted(glob.glob(f'{DOSSIER}/*.nc'))
-# print(f"{len(fichiers)} fichiers trouvés")
+# Lat/lon depuis le premier fichier
+ds_ref = nc.Dataset(fichiers[0])
+lats = ds_ref['latitude'][:]
+lons = ds_ref['longitude'][:]
+ds_ref.close()
 
-# # Lat/lon depuis le premier fichier
-# ds_ref = nc.Dataset(fichiers[0])
-# lats = ds_ref['latitude'][:]
-# lons = ds_ref['longitude'][:]
-# ds_ref.close()
+triang = tri.Triangulation(lons, lats)
 
-# triang = tri.Triangulation(lons, lats)
-
-# vars_config = {
-#     '2t':  {'cmap': 'coolwarm', 'label': '2t (K)'},
-#     '10u': {'cmap': 'coolwarm',  'label': '10u (m/s)'},
-#     '10v': {'cmap': 'coolwarm',  'label': '10v (m/s)'},
-# }
+vars_config = {
+    '2t':  {'cmap': 'coolwarm', 'label': '2t (K)'},
+    '10u': {'cmap': 'coolwarm',  'label': '10u (m/s)'},
+    '10v': {'cmap': 'coolwarm',  'label': '10v (m/s)'},
+}
 
 
-# for varname, cfg in vars_config.items():
-#     print(f"Chargement de {varname} sur {len(fichiers)} fichiers...")
-#     data = []
-#     fichiers_valides = 0
-#     for f in tqdm(fichiers, desc=f"  Lecture {varname}"):
-#         try:
-#             ds = nc.Dataset(f)
-#             data.append(np.array(ds[varname][0, :]))
-#             ds.close()
-#             fichiers_valides += 1
-#         except Exception as e:
-#             print(f"\n  Fichier ignoré : {f} ({e})")
+for varname, cfg in vars_config.items():
+    print(f"Chargement de {varname} sur {len(fichiers)} fichiers...")
+    data = []
+    fichiers_valides = 0
+    for f in tqdm(fichiers, desc=f"  Lecture {varname}"):
+        try: #ici dans le cal shape 100
+            ds = nc.Dataset(f)
+            print(np.array(ds[varname][1:,]).shape)
+            # data.append(np.array(ds[varname][1, :]))
+            print('TEST',varname, np.mean(np.array(ds[varname][1:,])))
+            data.append(np.array(ds[varname][1:,]))
 
-#     print(f"  {fichiers_valides}/{len(fichiers)} fichiers lus avec succès")
+            ds.close()
+            fichiers_valides += 1
+        except Exception as e:
+            print(f"\n  Fichier ignoré : {f} ({e})")
+
+    print(f"  {fichiers_valides}/{len(fichiers)} fichiers lus avec succès")
     
-#     # data = []
-#     # for f in tqdm(fichiers, desc=f"  Lecture {varname}"):
-#     #     ds = nc.Dataset(f)
-#     #     data.append(ds[varname][0, :])
-#     #     ds.close()
+    # data = []
+    # for f in tqdm(fichiers, desc=f"  Lecture {varname}"):
+    #     ds = nc.Dataset(f)
+    #     data.append(ds[varname][0, :])
+    #     ds.close()
 
-#     data = np.stack(data, axis=0)  # (n_fichiers, 665679)
-#     print(f"  Shape : {data.shape}")
+    # data = np.stack(data, axis=0)  # (n_fichiers, 665679)
+    data = np.concatenate(data, axis=0)
+    print(data.shape,'je suis data shape')
+    print(f"  Shape : {data.shape}")
 
 
 #     print(f"  Calcul des quantiles... (peut prendre quelques minutes)")
@@ -135,9 +142,9 @@ from tqdm import tqdm
 #     print(f"  Q90 done")
 
 #     # Sauvegarde npy
-#     np.save(f'{DOSSIER}/q10_{varname}_inference21.npy', q10)
-#     np.save(f'{DOSSIER}/q50_{varname}_inference21.npy', q50)
-#     np.save(f'{DOSSIER}/q90_{varname}_inference21.npy', q90)
+#     np.save(f'{DOSSIER}/q10_{varname}_inference_193K.npy', q10)
+#     np.save(f'{DOSSIER}/q50_{varname}_inference_193K.npy', q50)
+#     np.save(f'{DOSSIER}/q90_{varname}_inference_193K.npy', q90)
 #     print(f"  .npy sauvegardés pour {varname}")
 
 #     # Plot
@@ -155,7 +162,7 @@ from tqdm import tqdm
 
 #     plt.suptitle(f'Quantiles de {varname} — {len(fichiers)} samples', fontsize=14)
 #     plt.tight_layout()
-#     plt.savefig(f'{DOSSIER}/quantiles_{varname}_inference_21.png', dpi=150, bbox_inches='tight')
+#     plt.savefig(f'{DOSSIER}/quantiles_{varname}_inference_193K.png', dpi=150, bbox_inches='tight')
 #     plt.close()
 #     print(f"  .png sauvegardé pour {varname}")
     
@@ -165,59 +172,59 @@ from tqdm import tqdm
 
 
 ####################################################### PLOT DIFF #####################################################
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.tri as tri
-import netCDF4 as nc
 
-DOSSIER = '/project/home/p200177/DE_371/angeliquebonamy/anemoi/inferences/quantiles_runner2'
+# NETCDF ='/project/home/p200177/DE_371/avritj/experiments_anemoi/inference/netcdf_full_training_angelique'
+# DOSSIER='/project/home/p200177/DE_371/angeliquebonamy/anemoi/inferences/final_training/scores_190K_steps'
+# AROME_QUANTILES = '/project/home/p200177/DE_371/angeliquebonamy/anemoi/inferences/quantiles_arome'# Trouver tous les .nc
+# fichiers = sorted(glob.glob(f'{NETCDF}/*.nc'))
+# print(f"{len(fichiers)} fichiers trouvés")
 
-# Lat/lon
-ds_ref = nc.Dataset(f'/project/home/p200177/DE_371/angeliquebonamy/anemoi/inferences/netcdf_runner1/file_0.nc')
-lats = ds_ref['latitude'][:]
-lons = ds_ref['longitude'][:]
-ds_ref.close()
+# # Lat/lon depuis le premier fichier
+# ds_ref = nc.Dataset(fichiers[0])
+# lats = ds_ref['latitude'][:]
+# lons = ds_ref['longitude'][:]
+# ds_ref.close()
 
-triang = tri.Triangulation(lons, lats)
-vars_config = {
-    '2t':  {'cmap': 'coolwarm', 'label': '2t (K)'},
-    '10u': {'cmap': 'coolwarm',  'label': '10u (m/s)'},
-    '10v': {'cmap': 'coolwarm',  'label': '10v (m/s)'},
-}
+# triang = tri.Triangulation(lons, lats)
+# vars_config = {
+#     '2t':  {'cmap': 'coolwarm', 'label': '2t (K)'},
+#     '10u': {'cmap': 'coolwarm',  'label': '10u (m/s)'},
+#     '10v': {'cmap': 'coolwarm',  'label': '10v (m/s)'},
+# }
 
 
-for varname, cfg in vars_config.items():
-    q10_inf   = np.load(f'{DOSSIER}/q10_{varname}_inference21.npy')
-    q50_inf   = np.load(f'{DOSSIER}/q50_{varname}_inference21.npy')
-    q90_inf   = np.load(f'{DOSSIER}/q90_{varname}_inference21.npy')
+# for varname, cfg in vars_config.items():
+#     q10_inf   = np.load(f'{DOSSIER}/q10_{varname}_inference_193K.npy')
+#     q50_inf   = np.load(f'{DOSSIER}/q50_{varname}_inference_193K.npy')
+#     q90_inf   = np.load(f'{DOSSIER}/q90_{varname}_inference_193K.npy')
 
-    q10_arome = np.load(f'{DOSSIER}/q10_{varname}_train_arome.npy')
-    q50_arome = np.load(f'{DOSSIER}/q50_{varname}_train_arome.npy')
-    q90_arome = np.load(f'{DOSSIER}/q90_{varname}_train_arome.npy')
+#     q10_arome = np.load(f'{AROME_QUANTILES}/q10_{varname}_train_arome.npy')
+#     q50_arome = np.load(f'{AROME_QUANTILES}/q50_{varname}_train_arome.npy')
+#     q90_arome = np.load(f'{AROME_QUANTILES}/q90_{varname}_train_arome.npy')
 
-    # Différences
-    diff_q10 = q10_inf - q10_arome
-    diff_q50 = q50_inf - q50_arome
-    diff_q90 = q90_inf - q90_arome
+# #     # Différences
+#     diff_q10 = q10_inf - q10_arome
+#     diff_q50 = q50_inf - q50_arome
+#     diff_q90 = q90_inf - q90_arome
 
-    # Colorbar symétrique centrée sur 0
-    vmax = np.nanmax(np.abs([diff_q10, diff_q50, diff_q90]))
-    vmin = -vmax
+# #     # Colorbar symétrique centrée sur 0
+#     vmax = np.nanmax(np.abs([diff_q10, diff_q50, diff_q90]))
+#     vmin = -vmax
 
-    fig, axes = plt.subplots(1, 3, figsize=(18, 5))
-    for ax, diff, title in zip(axes, [diff_q10, diff_q50, diff_q90], ['Q10', 'Q50', 'Q90']):
-        im = ax.tripcolor(triang, diff, cmap=cfg['cmap'], vmin=vmin, vmax=vmax)
-        fig.colorbar(im, ax=ax, label=cfg['label'], shrink=0.8)
-        ax.set_title(f'Diff {title} — {varname} (inf - AROME)')
-        ax.set_xlabel('Longitude')
-        ax.set_ylabel('Latitude')
-        ax.set_aspect('equal')
+#     fig, axes = plt.subplots(1, 3, figsize=(18, 5))
+#     for ax, diff, title in zip(axes, [diff_q10, diff_q50, diff_q90], ['Q10', 'Q50', 'Q90']):
+#         im = ax.tripcolor(triang, diff, cmap=cfg['cmap'], vmin=vmin, vmax=vmax)
+#         fig.colorbar(im, ax=ax, label=cfg['label'], shrink=0.8)
+#         ax.set_title(f'Diff {title} — {varname} (inf - AROME)')
+#         ax.set_xlabel('Longitude')
+#         ax.set_ylabel('Latitude')
+#         ax.set_aspect('equal')
 
-    plt.suptitle(f'Différence inférence - AROME : {varname}', fontsize=14)
-    plt.tight_layout()
-    plt.savefig(f'{DOSSIER}/diff_{varname}_inf21_train_arome.png', dpi=150, bbox_inches='tight')
-    plt.close()
-    print(f"Sauvegardé : {DOSSIER}/diff_{varname}_inf21_train_arome.png")
+#     plt.suptitle(f'Différence inférence - AROME : {varname}', fontsize=14)
+#     plt.tight_layout()
+#     plt.savefig(f'{DOSSIER}/diff_{varname}_inf_193K_train_arome.png', dpi=150, bbox_inches='tight')
+#     plt.close()
+#     print(f"Sauvegardé : {DOSSIER}/diff_{varname}_inf_193K_train_arome.png")
     
     
     # fig, axes = plt.subplots(1, 3, figsize=(18, 5))
@@ -251,8 +258,8 @@ for varname, cfg in vars_config.items():
 #     '10u': {'label': '10u (m/s)', 'color': '#378ADD'},
 #     '10v': {'label': '10v (m/s)', 'color': '#1D9E75'},
 # }
-
-# DOSSIER = '/project/home/p200177/DE_371/angeliquebonamy/anemoi/inferences/quantiles_runner2'
+# DOSSIER='/project/home/p200177/DE_371/angeliquebonamy/anemoi/inferences/final_training/scores_190K_steps'
+# AROME_QUANTILES = '/project/home/p200177/DE_371/angeliquebonamy/anemoi/inferences/quantiles_arome'
 
 # # Quantiles à calculer (de 1% à 99%)
 # percentiles = np.arange(1, 100, 1)
@@ -261,8 +268,8 @@ for varname, cfg in vars_config.items():
 
 # for ax, (varname, cfg) in zip(axes, vars_config.items()):
 
-#     q_inf   = np.load(f'{DOSSIER}/q10_{varname}_inference.npy')
-#     q_arome = np.load(f'{DOSSIER}/q10_{varname}_train_arome.npy')
+#     q_inf   = np.load(f'{DOSSIER}/q10_{varname}_inference_193K.npy')
+#     q_arome = np.load(f'{AROME_QUANTILES}/q10_{varname}_train_arome.npy')
 
 #     # Calculer les quantiles sur tous les points de grille
 #     q_inf_vals   = np.nanpercentile(q_inf,   percentiles)
@@ -290,79 +297,93 @@ for varname, cfg in vars_config.items():
 
 
 
-# import numpy as np
-# import matplotlib.pyplot as plt
-# import netCDF4 as nc
-# import zarr
-# from tqdm import tqdm
+import numpy as np
+import matplotlib.pyplot as plt
+import netCDF4 as nc
+import zarr
+from tqdm import tqdm
 
-# DOSSIER = '/project/home/p200177/DE_371/angeliquebonamy/anemoi/inferences/netcdf_runner1'
-# ZARR_PATH = '/project/home/p200177/DE_371/datasets/arome-an-oper-titan-0p025-2020-2024-1h-v4-eurw-precip6/arome-an-oper-titan-0p025-2020-2024-1h-v4-eurw-precip6/arome-an-oper-titan-0p025-2020-2024-1h-v4-eurw-precip6.zarr'
+NETCDF ='/project/home/p200177/DE_371/avritj/experiments_anemoi/inference/netcdf_full_training_angelique'
+ZARR_PATH = '/project/home/p200177/DE_371/datasets/arome-an-oper-titan-0p025-2020-2024-1h-v4-eurw-precip6/arome-an-oper-titan-0p025-2020-2024-1h-v4-eurw-precip6/arome-an-oper-titan-0p025-2020-2024-1h-v4-eurw-precip6.zarr'
+DOSSIER='/project/home/p200177/DE_371/angeliquebonamy/anemoi/inferences/final_training/scores_190K_steps'
 
-# vars_config = {
-#     '2t':  {'label': '2t (K)',    'color': '#D85A30'},
-#     '10u': {'label': '10u (m/s)', 'color': '#378ADD'},
-#     '10v': {'label': '10v (m/s)', 'color': '#1D9E75'},
-# }
+vars_config = {
+    '2t':  {'label': '2t (K)',    'color': '#D85A30'},
+    '10u': {'label': '10u (m/s)', 'color': '#378ADD'},
+    '10v': {'label': '10v (m/s)', 'color': '#1D9E75'},
+}
 
-# percentiles = np.arange(1, 100, 1)
+percentiles = np.arange(1, 100, 1)
 
-# # --- Charger toutes les inférences : shape (n_samples * 665679,) ---
-# fichiers = sorted(glob.glob(f'{DOSSIER}/*.nc'))
+# --- Charger toutes les inférences : shape (n_samples * 665679,) ---
+fichiers = sorted(glob.glob(f'{NETCDF}/*.nc'))
 
-# # --- Charger AROME ---
-# ds_zarr = zarr.open(ZARR_PATH, mode='r')
-# variables = list(ds_zarr.attrs['variables'])
-# dates = ds_zarr['dates'][:]
-# date_start = np.datetime64('2020-01-01')
-# date_end   = np.datetime64('2023-01-04')
-# mask = (dates >= date_start) & (dates <= date_end)
-# indices_disponibles = np.where(mask)[0]
-# n_samples = min(500, len(indices_disponibles))
-# np.random.seed(42)
-# indices_dates = np.random.choice(indices_disponibles, size=n_samples, replace=False)
-# indices_dates.sort()
+# --- Charger AROME ---output_file
+ds_zarr = zarr.open(ZARR_PATH, mode='r')
+variables = list(ds_zarr.attrs['variables'])
+dates = ds_zarr['dates'][:]
+date_start = np.datetime64('2020-01-01')
+date_end   = np.datetime64('2023-01-04')
+mask = (dates >= date_start) & (dates <= date_end)
+indices_disponibles = np.where(mask)[0]
+n_samples = min(500, len(indices_disponibles))
+np.random.seed(42)
+indices_dates = np.random.choice(indices_disponibles, size=n_samples, replace=False)
+indices_dates.sort()
 
-# fig, axes = plt.subplots(1, 3, figsize=(18, 5))
+fig, axes = plt.subplots(1, 3, figsize=(18, 5))
 
-# for ax, (varname, cfg) in zip(axes, vars_config.items()):
+for ax, (varname, cfg) in zip(axes, vars_config.items()):
+    data_inf = []
 
-#     # Inférence : flatten tous les samples et tous les points
-#     data_inf = []
-#     for f in tqdm(fichiers, desc=f'Lecture inférence {varname}'):
-#         try:
-#             ds = nc.Dataset(f)
-#             data_inf.append(np.array(ds[varname][0, :]))
-#             ds.close()
-#         except Exception as e:
-#             print(f"Fichier ignoré : {f} ({e})")
-#     data_inf = np.stack(data_inf, axis=0).flatten()  # (n_samples * 665679,)
+    for f in tqdm(fichiers, desc=f'Lecture inférence {varname}'):
+        try: 
+            ds = nc.Dataset(f)
+            d = np.array(ds[varname][1:, :])  # (100, points)
+            data_inf.append(d.reshape(-1))    # flatten direct
+            ds.close()
+        except Exception as e:
+            print(f"Fichier ignoré : {f} ({e})")
 
-#     # AROME : flatten tous les samples et tous les points
-#     var_idx = variables.index(varname)
-#     data_arome = ds_zarr['data'].oindex[indices_dates, var_idx, 0, :]  # (500, 665679)
-#     data_arome = data_arome.flatten()  # (500 * 665679,)
+    data_inf = np.concatenate(data_inf)  # 1D directement
+    # Inférence : flatten tous les samples et tous les points
+    # data_inf = []
+    # for f in tqdm(fichiers, desc=f'Lecture inférence {varname}'):
+    #     try:
+    #         ds = nc.Dataset(f)
+    #         # data_inf.append(np.array(ds[varname][0, :]))
+    #         data_inf.append(np.array(ds[varname][1:,: ])) # pour 100 samples
 
-#     # Calcul des percentiles sur la distribution complète
-#     q_inf   = np.nanpercentile(data_inf,   percentiles)
-#     q_arome = np.nanpercentile(data_arome, percentiles)
+    #         ds.close()
+    #     except Exception as e:
+    #         print(f"Fichier ignoré : {f} ({e})")
+    # data_inf = np.stack(data_inf, axis=0).flatten()  # (n_samples * 665679,)
 
-#     # Droite y=x
-#     vmin = min(q_inf.min(), q_arome.min())
-#     vmax = max(q_inf.max(), q_arome.max())
-#     ax.plot([vmin, vmax], [vmin, vmax], 'k--', linewidth=1, label='y=x')
+    # AROME : flatten tous les samples et tous les points
+    var_idx = variables.index(varname)
+    data_arome = ds_zarr['data'].oindex[indices_dates, var_idx, 0, :]  # (500, 665679)
+    data_arome = data_arome.flatten()  # (500 * 665679,)
 
-#     # QQ-plot
-#     ax.scatter(q_arome, q_inf, color=cfg['color'], s=20, alpha=0.7)
+    # Calcul des percentiles sur la distribution complète
+    q_inf   = np.nanpercentile(data_inf,   percentiles)
+    q_arome = np.nanpercentile(data_arome, percentiles)
 
-#     ax.set_xlabel(f'AROME — {cfg["label"]}')
-#     ax.set_ylabel(f'Inférence — {cfg["label"]}')
-#     ax.set_title(f'QQ-plot {varname}')
-#     ax.legend()
-#     ax.set_aspect('equal')
+    # Droite y=x
+    vmin = min(q_inf.min(), q_arome.min())
+    vmax = max(q_inf.max(), q_arome.max())
+    ax.plot([vmin, vmax], [vmin, vmax], 'k--', linewidth=1, label='y=x')
 
-# plt.suptitle('QQ-plot inférence vs AROME', fontsize=14)
-# plt.tight_layout()
-# plt.savefig(f'qqplot_inf_arome.png', dpi=150, bbox_inches='tight')
-# plt.close()
-# print("Sauvegardé : qqplot_inf_arome.png")
+    # QQ-plot
+    ax.scatter(q_arome, q_inf, color=cfg['color'], s=20, alpha=0.7)
+
+    ax.set_xlabel(f'AROME — {cfg["label"]}')
+    ax.set_ylabel(f'Inférence — {cfg["label"]}')
+    ax.set_title(f'QQ-plot {varname}')
+    ax.legend()
+    ax.set_aspect('equal')
+
+plt.suptitle('QQ-plot inférence vs AROME', fontsize=14)
+plt.tight_layout()
+plt.savefig(f'{DOSSIER}/qqplot_inf_arome_193K.png', dpi=150, bbox_inches='tight')
+plt.close()
+print("Sauvegardé : qqplot_inf_arome.png")
