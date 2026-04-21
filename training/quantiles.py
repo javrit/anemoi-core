@@ -295,13 +295,9 @@ for varname, cfg in vars_config.items():
 # plt.close()
 # print("Sauvegardé : qqplot_inf2_train_arome.png")
 
+################################################" Quantiles QQ ########################################################
 
 
-import numpy as np
-import matplotlib.pyplot as plt
-import netCDF4 as nc
-import zarr
-from tqdm import tqdm
 
 NETCDF ='/project/home/p200177/DE_371/avritj/experiments_anemoi/inference/netcdf_full_training_angelique'
 ZARR_PATH = '/project/home/p200177/DE_371/datasets/arome-an-oper-titan-0p025-2020-2024-1h-v4-eurw-precip6/arome-an-oper-titan-0p025-2020-2024-1h-v4-eurw-precip6/arome-an-oper-titan-0p025-2020-2024-1h-v4-eurw-precip6.zarr'
