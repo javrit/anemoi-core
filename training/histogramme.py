@@ -19,9 +19,9 @@ from itertools import combinations_with_replacement
 # ── Config ─────────────────────────────────────────────────────────────────────
 
 ZARR_PATH = '/project/home/p200177/DE_371/datasets/arome-an-oper-titan-0p025-2020-2024-1h-v4-eurw-precip6/arome-an-oper-titan-0p025-2020-2024-1h-v4-eurw-precip6/arome-an-oper-titan-0p025-2020-2024-1h-v4-eurw-precip6.zarr'
-NETCDF_DIR  = '/project/home/p200177/DE_371/angeliquebonamy/anemoi/inferences/final_training/'          # dossier contenant les fichiers *.nc fake
-OUTPUT_DIR  = './'
-
+# NETCDF_DIR  = '/project/home/p200177/DE_371/angeliquebonamy/anemoi/inferences/final_training/scores_362K_steps/'#/project/home/p200177/DE_371/angeliquebonamy/anemoi/inferences/final_training/'          # dossier contenant les fichiers *.nc fake
+OUTPUT_DIR  = '/project/home/p200177/DE_371/angeliquebonamy/anemoi/inferences/final_training/scores_362K_steps'
+NETCDF_DIR= '/project/home/p200177/DE_371/angeliquebonamy/anemoi/inferences/final_training/scores_279K_steps'
 VARS_TO_USE = ['10u', '10v', '2t']
 
 DATE_START  = np.datetime64('2024-04-02')
@@ -154,6 +154,8 @@ def plot2D_histo(bivariates_r, bivariates_f, bins_r, levels, output_dir, add_nam
 def load_netcdf_file(nc_path, vars_to_use):
     ds     = nc.Dataset(nc_path, "r")
     arrays = []
+    print('JE SUIS DS',ds)
+    print('VARS', vars_to_use)
     for var in vars_to_use:
         if var not in ds.variables:
             raise KeyError(f"Variable '{var}' absente de {nc_path}")
@@ -166,7 +168,7 @@ def load_netcdf_file(nc_path, vars_to_use):
 
 def run():
     nc_files = sorted(glob.glob(os.path.join(NETCDF_DIR, "*.nc")))
-    print(f"{len(nc_files)} fichiers NetCDF trouvés")
+    print('JE SUIS PATH',os.path.join(NETCDF_DIR),f"{len(nc_files)} fichiers NetCDF trouvés")
 
     # Ouverture zarr + sélection des dates
     ds_zarr      = zarr.open(ZARR_PATH, mode='r')
