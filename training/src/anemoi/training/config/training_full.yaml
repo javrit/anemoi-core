@@ -17,9 +17,9 @@ diagnostics:
       enabled: True
       offline: False
       on_resume_create_child: False
-      experiment_name: 'uncond_diffusion_training_complet'
+      experiment_name: 'uncond_diffusion_training_complet_fine_tuning_low'
       project_name: 'uncond_diffusion_training_complet'
-      run_name: 'train_mean'
+      run_name: 'train_mean_fine_tuning_low'
       tracking_uri: 'https://mlflow.ecmwf.int'
       authentication: True
       terminal: False
@@ -106,6 +106,7 @@ training:
   # Set max_epochs or max_steps. Training stops at the first limit reached.
   max_steps: 500000
   model_task: anemoi.training.train.tasks.GraphUnconditionalDiffusionForecaster
-  training_approach: probabilistic_high_noise 
+  training_approach: probabilistic_low_noise 
   multistep_input: 1
-  run_id: 93e76f957f7247e286626ed990768e2c
+  fork_run_id: 93e76f957f7247e286626ed990768e2c
+  load_weights_only: True
