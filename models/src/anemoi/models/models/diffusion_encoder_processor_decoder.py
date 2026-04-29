@@ -1019,24 +1019,12 @@ class AnemoiDiffusionModelEncProcDecUnconditional(AnemoiDiffusionModelEncProcDec
         """
         # To prepare the tensor, we must partially noise the condition tensor, with the right variables (prognostic variables).
         # To do so, we must remove from the condition tensor the forcings variables.
-        print("DANS PREPARE SAMPLE SDEDIT")
-        print("init sigma : ", init_sigma)
-        print("DANS SDEDIT : ", x, x.shape)
+        # print("DANS PREPARE SAMPLE SDEDIT")
+        # print("init sigma : ", init_sigma)
+        # print("DANS SDEDIT : ", x, x.shape)
         # self.plot_step("/project/home/p200177/DE_371/avritj/experiments_anemoi/inference/plots/overfit_3vars/x.png", x[0,...], [2], ["2t"], 0 )
         ###################""""
-        target = np.load("/home/users/u102751/code/anemoi/anemoi-env/overfit_samples copy.npy")[-1,...]
-        target=torch.from_numpy(target).to(device = x.device).to(dtype = x.dtype)
-        target = target.unsqueeze(0)
-        indices = torch.tensor([0,1,2,4], device= target.device)
-        target = torch.index_select(target, dim=-1, index=indices)
-        indices = torch.tensor([0,1,3,7]).to(target.device)
-        mean = torch.from_numpy(np.load("/project/home/p200177/DE_371/avritj/mean.npy")).to(target.device).to(target.dtype)[:78]
-        stdev = torch.from_numpy(np.load("/project/home/p200177/DE_371/avritj/stdev.npy")).to(target.device).to(target.dtype)[:78]
-        mean_4vars = torch.index_select(mean,dim=0, index=indices)
-        stdev_4vars = torch.index_select(stdev, dim=0, index=indices)
-
-        target = (target - mean_4vars) / stdev_4vars
-        #######################
+    
         forcings = self.data_indices["forcing"] 
         name_to_index = self.data_indices["name_to_index"]
 
@@ -1050,12 +1038,12 @@ class AnemoiDiffusionModelEncProcDecUnconditional(AnemoiDiffusionModelEncProcDec
         mask = torch.ones(x.shape[-1], dtype=torch.bool, device=x.device) #creating a mask to removed the forcing variables, keeping only the prognostics variables
         mask[idx_to_drop] = False
         _x = x[:,-1,:,:,mask] #We take only the time t= t0 (dim 1 corresponding to time = (t0-1, t0))
-        _x_ = x[:,-1,:,:,:]
         # y_init = (torch.randn(shape, device=x.device, dtype=init_sigma.dtype) * init_sigma + _x_).to(x.device)
         y_init = (torch.randn(shape, device=x.device, dtype=init_sigma.dtype) * init_sigma + _x).to(x.device)
 
         print("y _init", y_init)
         return y_init
+
     
 class AnemoiDiffusionTendModelEncProcDec(AnemoiDiffusionModelEncProcDec):
     """Diffusion model for tendency prediction."""
