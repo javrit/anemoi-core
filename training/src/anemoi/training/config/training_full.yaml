@@ -88,7 +88,7 @@ model:
 hardware:
   paths:
     data: /project/home/p200177/DE_371/datasets/arome-an-oper-titan-0p025-2020-2024-1h-v4-eurw-precip6/arome-an-oper-titan-0p025-2020-2024-1h-v4-eurw-precip6
-    output: /project/home/p200177/DE_371/angeliquebonamy/anemoi/training/Training_complet_mean/
+    output: /project/home/p200177/DE_371/avritj/anemoi/training/Training_complet_mean/
   files:
     dataset: arome-an-oper-titan-0p025-2020-2024-1h-v4-eurw-precip6.zarr
     graph: /project/home/p200177/DE_371/avritj/multi_scale_res9.pt
@@ -101,4 +101,3 @@ training:
   model_task: anemoi.training.train.tasks.GraphUnconditionalDiffusionForecaster
   training_approach: probabilistic_high_noise 
   multistep_input: 1
-  run_id: 93e76f957f7247e286626ed990768e2c
