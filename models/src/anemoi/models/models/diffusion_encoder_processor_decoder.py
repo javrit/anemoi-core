@@ -600,7 +600,7 @@ class AnemoiDiffusionModelEncProcDecUnconditional(AnemoiDiffusionModelEncProcDec
         grid_shard_shapes: Optional[list] = None,
         **kwargs,
     ) -> torch.Tensor:
-
+        
         batch_size = x.shape[0]
         in_out_sharded = grid_shard_shapes is not None
         self._assert_valid_sharding(batch_size, 1, in_out_sharded, model_comm_group)

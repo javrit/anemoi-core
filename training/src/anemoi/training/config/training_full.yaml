@@ -14,14 +14,14 @@ config_validation: False
 diagnostics:
   log:
     mlflow:
-      enabled: True
+      enabled: False
       offline: False
       on_resume_create_child: False
       experiment_name: 'uncond_diffusion_training_complet'
       project_name: 'uncond_diffusion_training_complet'
       run_name: 'train_mean'
       tracking_uri: 'https://mlflow.ecmwf.int'
-      authentication: True
+      authentication: False
       terminal: False
 
     wandb:
