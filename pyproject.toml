@@ -117,9 +117,8 @@ mlflow-export-import = { git = "https://github.com/mlflow/mlflow-export-import/"
 
 ### Tmp
 anemoi-datasets = { git = "https://github.com/ecmwf/anemoi-datasets", branch = "main" }    # hot-fix for anemoi-datasets ZipBase class #377
-anemoi-models = { path = "/home/users/u102751/code/anemoi/anemoi-core/models", editable = true }    # for debugging
-anemoi-inference = {path = "/home/users/u102751/code/anemoi/anemoi-inference", editable = true }
-anemoi-training = {path = "/home/users/u102751/code/anemoi/anemoi-core/training", editable = true}
+anemoi-models = { git = "https://github.com/javrit/anemoi-core", subdirectory = "models", branch = "main" }
+anemoi-training = { git = "https://github.com/javrit/anemoi-core", subdirectory = "training", branch = "main" }
 [tool.setuptools_scm]
 root = ".."
 version_scheme = "post-release"
