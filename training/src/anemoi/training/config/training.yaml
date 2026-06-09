@@ -14,16 +14,8 @@ config_validation: False
 diagnostics:
   log:
     mlflow:
-      enabled: True
+      enabled: False
       offline: False
-      on_resume_create_child: False
-      experiment_name: 'uncond_diffusion_training_complet'
-      project_name: 'uncond_diffusion_training_complet'
-      run_name: 'train_mean'
-      tracking_uri: 'https://mlflow.ecmwf.int'
-      authentication: True
-      terminal: False
-
     wandb:
       enabled: False
       entity: "none"
@@ -95,10 +87,10 @@ model:
 hardware:
   paths:
     data: /project/home/p200177/DE_371/datasets/arome-an-oper-titan-0p025-2020-2024-1h-v4-eurw-precip6/arome-an-oper-titan-0p025-2020-2024-1h-v4-eurw-precip6
-    output: /project/home/p200177/DE_371/angeliquebonamy/anemoi/training/Training_complet_mean/
+    output: path/to/output-dir
   files:
     dataset: arome-an-oper-titan-0p025-2020-2024-1h-v4-eurw-precip6.zarr
-    graph: /project/home/p200177/DE_371/avritj/multi_scale_res9.pt
+    graph: path/to/graph
   num_gpus_per_node: 4
   num_gpus_per_model: 2
   num_nodes: 8
@@ -108,4 +100,3 @@ training:
   model_task: anemoi.training.train.tasks.GraphUnconditionalDiffusionForecaster
   training_approach: probabilistic_high_noise 
   multistep_input: 1
-  run_id: 93e76f957f7247e286626ed990768e2c

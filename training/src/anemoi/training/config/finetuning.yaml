@@ -17,9 +17,9 @@ diagnostics:
       enabled: True
       offline: False
       on_resume_create_child: False
-      experiment_name: 'uncond_diffusion_training_complet'
-      project_name: 'uncond_diffusion_training_complet'
-      run_name: 'train_mean'
+      experiment_name: 'uncond_diffusion_training_complet_finetuning'
+      project_name: 'uncond_diffusion_training_complet_finetuning'
+      run_name: 'train_mean_finetuning'
       tracking_uri: 'https://mlflow.ecmwf.int'
       authentication: True
       terminal: False
@@ -95,17 +95,21 @@ model:
 hardware:
   paths:
     data: /project/home/p200177/DE_371/datasets/arome-an-oper-titan-0p025-2020-2024-1h-v4-eurw-precip6/arome-an-oper-titan-0p025-2020-2024-1h-v4-eurw-precip6
-    output: /project/home/p200177/DE_371/angeliquebonamy/anemoi/training/Training_complet_mean/
+    output: path/to/output-dir
+    warm_start: path/to/last/ckpt
+
   files:
+    warm_start: last.ckpt
     dataset: arome-an-oper-titan-0p025-2020-2024-1h-v4-eurw-precip6.zarr
-    graph: /project/home/p200177/DE_371/avritj/multi_scale_res9.pt
+    graph: path/to/graph
   num_gpus_per_node: 4
   num_gpus_per_model: 2
   num_nodes: 8
 training:
   # Set max_epochs or max_steps. Training stops at the first limit reached.
-  max_steps: 500000
+  max_steps: 150000
   model_task: anemoi.training.train.tasks.GraphUnconditionalDiffusionForecaster
-  training_approach: probabilistic_high_noise 
+  training_approach: probabilistic_low_noise 
   multistep_input: 1
-  run_id: 93e76f957f7247e286626ed990768e2c
+  fork_run_id: fork_run_id
+  load_weights_only: True

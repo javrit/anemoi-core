@@ -1,12 +1,12 @@
 defaults:
-- data: zarr_bon #to change to our own config
+- data: zarr_uncond #to change to our own config
 - dataloader: native_grid #to change to our own config
 - diagnostics: enrichment
 - datamodule: single
 - hardware: example
 - graph: existing_graph
-- model: graphtransformer_diffusionuncond
-- training: diffusion_uncond
+- model: graphtransformer_diffusion
+- training: diffusion
 - _self_
 
 # set to true to switch on config validation
