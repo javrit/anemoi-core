@@ -66,16 +66,9 @@ class InputNormalizer(BasePreprocessor):
         _norm_add = np.zeros((minimum.size,), dtype=np.float32)
         _norm_mul = np.ones((minimum.size,), dtype=np.float32)
         for name, i in name_to_index_training_input.items():
-            # print('je suis ZZZZZZZZZZZ',name, type(name),name_to_index_training_input.items())
 
-            if i==7:
-                print('je suis ZZZZZZZZZZZ',i)
-            
             method = self.methods.get(name, self.default)
-            if i==7:
-                print('je suis ZZZZZZZZZZZ',i,method)
-            if i==4:
-                print('je suis ZZZZZZZZZZZ',name,i,method)
+    
             if method == "mean-std":
                 LOGGER.debug(f"Normalizing: {name} is mean-std-normalised.")
                 if stdev[i] < (mean[i] * 1e-6):

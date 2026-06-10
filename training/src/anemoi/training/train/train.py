@@ -489,9 +489,7 @@ class AnemoiTrainer(ABC):
     def train(self) -> None:
         """Training entry point."""
         LOGGER.debug("Setting up trainer..")
-        import os 
-        print ('RANK=', os.environ.get("RANK"))
-        print('WORLD SIZE', os.environ.get("WORLD_SIZE"))
+
         trainer = pl.Trainer(
             accelerator=self.accelerator,
             callbacks=self.callbacks,
