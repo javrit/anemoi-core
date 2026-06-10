@@ -88,6 +88,10 @@ model:
     _target_: anemoi.models.models.AnemoiDiffusionModelEncProcDecUnconditional
     diffusion:
       sigma_max: 1000
+      sigma_min: 0.02
+      log_normal_mean: -1.2
+      log_normal_std: 1.2
+      rho: 7.0
   processor:
     num_layers: 16
   condition: "mean" # configs : "zero", "mean", "mean_3vars" (for overfitting only), orography, orography_3vars (for overfitting only), 
