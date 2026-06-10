@@ -565,15 +565,15 @@ class AnemoiDiffusionModelEncProcDecUnconditional(AnemoiDiffusionModelEncProcDec
             )
             node_attributes_data = shard_tensor(node_attributes_data, 0, shard_shapes_nodes, model_comm_group)
         
-        if self.model_config.model.condition == "mean":
+        if self.model_config["model"]["condition"] == "mean":
 
             rank_zero_info("Condition configuration used : [mean]")
 
-            assert self.model_config.model.conditions_files.mean_point is not None, "self.model_config.model.conditions_files.mean_point is None"
-            assert self.model_config.model.conditions_files.mean_vars is not None, "self.model_config.model.conditions_files.mean_vars is None"
-            assert self.model_config.model.conditions_files.std_vars is not None, "self.model_config.model.conditions_files.std_vars is None"
+            assert self.model_config["model"]["condition_files"]["mean_point"] is not None, "self.model_config['model']['condition_files'].mean_point is None"
+            assert self.model_config["model"]["condition_files"]["mean_vars"] is not None, "self.model_config['model']['condition_files'].mean_vars is None"
+            assert self.model_config["model"]["condition_files"]["std_vars"] is not None, "self.model_config['model']['condition_files'].std_vars is None"
 
-            x_mean = torch.from_numpy(np.load(self.model_config.model.conditions_files.mean_point)).to(x.device).to(x.dtype) # mean of each variable over the whole train dataset
+            x_mean = torch.from_numpy(np.load(self.model_config["model"]["condition_files"]["mean_point"])).to(x.device).to(x.dtype) # mean of each variable over the whole train dataset
             # shape of the mean : (1 , 1, lat * lon, variables)
             x_mean = x_mean.unsqueeze(0).expand(-1, self.multi_step, -1, -1, -1) 
             shard_shapes = get_shard_shapes(x_mean, -2, model_comm_group=model_comm_group)
@@ -581,8 +581,8 @@ class AnemoiDiffusionModelEncProcDecUnconditional(AnemoiDiffusionModelEncProcDec
 
             # mean-std normalization of the mean:
     
-            mean = torch.from_numpy(np.load(self.model_config.model.conditions_files.mean_vars)).to(x_mean.device).to(x_mean.dtype) # spatial mean for each variable : shape = (78,) 
-            stdev = torch.from_numpy(np.load(self.model_config.model.conditions_files.std_vars)).to(x_mean.device).to(x_mean.dtype) # spatial std for each variable : shape = (78,)
+            mean = torch.from_numpy(np.load(self.model_config["model"]["condition_files"]["mean_vars"])).to(x_mean.device).to(x_mean.dtype) # spatial mean for each variable : shape = (78,) 
+            stdev = torch.from_numpy(np.load(self.model_config["model"]["condition_files"]["std_vars"])).to(x_mean.device).to(x_mean.dtype) # spatial std for each variable : shape = (78,)
             
             x_mean = (x_mean - mean) / stdev
             
@@ -595,7 +595,7 @@ class AnemoiDiffusionModelEncProcDecUnconditional(AnemoiDiffusionModelEncProcDec
                 dim=-1,  # feature dimension
             )
         
-        elif self.model_config.model.condition == "zero": # replacing the condition (t, t-1, t-2, ... by a null tensor)
+        elif self.model_config["model"]["condition"] == "zero": # replacing the condition (t, t-1, t-2, ... by a null tensor)
 
             x_zeros = torch.zeros_like(x, dtype= x.dtype, device = x.device)
 

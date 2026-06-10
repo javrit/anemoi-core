@@ -89,7 +89,6 @@ class StdevTendencyScaler(BaseTendencyScaler):
     """Scale loses by standard deviation of tendency statistics."""
 
     def get_level_scaling(self, variable_stdev: float, variable_tendency_stdev: float) -> float:
-        print("stdevtendecny scaler")
 
         return variable_stdev / variable_tendency_stdev
 
