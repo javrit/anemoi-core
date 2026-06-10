@@ -88,13 +88,11 @@ model:
     _target_: anemoi.models.models.AnemoiDiffusionModelEncProcDecUnconditional
     diffusion:
       sigma_max: 1000
-      sigma_min: 0.02
       log_normal_mean: -1.2
       log_normal_std: 1.2
-      rho: 7.0
   processor:
     num_layers: 16
-  condition: "mean" # configs : "zero", "mean", "mean_3vars" (for overfitting only), orography, orography_3vars (for overfitting only), 
+  condition: "zero" # configs : "zero", "mean", "mean_3vars" (for overfitting only), orography, orography_3vars (for overfitting only), 
 
 hardware:
   paths:
@@ -105,7 +103,7 @@ hardware:
     graph: /project/home/p200177/DE_371/avritj/multi_scale_res9.pt
   num_gpus_per_node: 4
   num_gpus_per_model: 2
-  num_nodes: 8
+  num_nodes: 1
 training:
   # Set max_epochs or max_steps. Training stops at the first limit reached.
   max_steps: 500000

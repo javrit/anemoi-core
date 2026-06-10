@@ -72,14 +72,15 @@ dataloader:
     test: 1
 
 model:
-  num_channels: 1024
   model:
     _target_: anemoi.models.models.AnemoiDiffusionModelEncProcDecUnconditional
     diffusion:
       sigma_max: 1000
+      log_normal_mean: -1.2
+      log_normal_std: 1.2
   processor:
     num_layers: 16
-  condition: "mean"  # options: "zero", "mean", "mean_3vars", "orography", "orography_3vars"
+  condition: "mean"  # options: "zero", "mean" ; set to zero if you have not computed the mean, and mean and std as explained in the README
 
 hardware:
   paths:
@@ -88,9 +89,9 @@ hardware:
   files:
     dataset: your-dataset.zarr                         # <-- update
     graph: /path/to/graph.pt                           # <-- update
-  num_gpus_per_node: 4
-  num_gpus_per_model: 2
-  num_nodes: 8
+  num_gpus_per_node: ???
+  num_gpus_per_model: ???
+  num_nodes: ???                              
 
 training:
   max_steps: 500000

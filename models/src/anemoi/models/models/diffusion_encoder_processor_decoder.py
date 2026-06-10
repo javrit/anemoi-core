@@ -565,27 +565,46 @@ class AnemoiDiffusionModelEncProcDecUnconditional(AnemoiDiffusionModelEncProcDec
             )
             node_attributes_data = shard_tensor(node_attributes_data, 0, shard_shapes_nodes, model_comm_group)
         
-        x_mean = torch.from_numpy(np.load("/project/home/p200177/DE_371/avritj/mean_train_vars_no_tp.npy")).to(x.device).to(x.dtype) # mean of each variable over the whole train dataset
-        # shape of the mean : (1 , 1, lat * lon, variables)
-        x_mean = x_mean.unsqueeze(0).expand(-1, self.multi_step, -1, -1, -1) 
-        shard_shapes = get_shard_shapes(x_mean, -2, model_comm_group=model_comm_group)
-        x_mean = shard_tensor(x_mean, -2, shard_shapes, model_comm_group)
+        if self.model.config.model.condition == "mean":
 
-        # mean-std normalization of the mean:
- 
-        mean = torch.from_numpy(np.load("/project/home/p200177/DE_371/avritj/mean.npy")).to(x_mean.device).to(x_mean.dtype) # spatial mean for each variable : shape = (78,) 
-        stdev = torch.from_numpy(np.load("/project/home/p200177/DE_371/avritj/stdev.npy")).to(x_mean.device).to(x_mean.dtype) # spatial std for each variable : shape = (78,)
+            rank_zero_info("Condition configuration used : [mean]")
+
+
+            x_mean = torch.from_numpy(np.load("/project/home/p200177/DE_371/avritj/mean_train_vars_no_tp.npy")).to(x.device).to(x.dtype) # mean of each variable over the whole train dataset
+            # shape of the mean : (1 , 1, lat * lon, variables)
+            x_mean = x_mean.unsqueeze(0).expand(-1, self.multi_step, -1, -1, -1) 
+            shard_shapes = get_shard_shapes(x_mean, -2, model_comm_group=model_comm_group)
+            x_mean = shard_tensor(x_mean, -2, shard_shapes, model_comm_group)
+
+            # mean-std normalization of the mean:
+    
+            mean = torch.from_numpy(np.load("/project/home/p200177/DE_371/avritj/mean.npy")).to(x_mean.device).to(x_mean.dtype) # spatial mean for each variable : shape = (78,) 
+            stdev = torch.from_numpy(np.load("/project/home/p200177/DE_371/avritj/stdev.npy")).to(x_mean.device).to(x_mean.dtype) # spatial std for each variable : shape = (78,)
+            
+            x_mean = (x_mean - mean) / stdev
+            
+            x_data_latent = torch.cat(
+                (
+                    einops.rearrange(x_mean, "batch time ensemble grid vars -> (batch ensemble grid) (time vars)"),
+                    einops.rearrange(y_noised, "batch ensemble grid vars -> (batch ensemble grid) vars"),
+                    node_attributes_data,
+                ),
+                dim=-1,  # feature dimension
+            )
         
-        x_mean = (x_mean - mean) / stdev
-        
-        x_data_latent = torch.cat(
-            (
-                einops.rearrange(x_mean, "batch time ensemble grid vars -> (batch ensemble grid) (time vars)"),
-                einops.rearrange(y_noised, "batch ensemble grid vars -> (batch ensemble grid) vars"),
-                node_attributes_data,
-            ),
-            dim=-1,  # feature dimension
-        )
+        elif self.model.config.model.condition == "zero": # replacing the condition (t, t-1, t-2, ... by a null tensor)
+
+            x_zeros = torch.zeros_like(x, dtype= x.dtype, device = x.device)
+
+            rank_zero_info("Condition configuration used : [zero]")
+            x_data_latent = torch.cat(
+                (
+                    einops.rearrange(x_zeros, "batch time ensemble grid vars -> (batch ensemble grid) (time vars)"),
+                    einops.rearrange(y_noised, "batch ensemble grid vars -> (batch ensemble grid) vars"),
+                    node_attributes_data,
+                ),
+                dim=-1,  # feature dimension
+            )
         shard_shapes_data = get_or_apply_shard_shapes(
             x_data_latent, 0, shard_shapes_dim=grid_shard_shapes, model_comm_group=model_comm_group
         )
