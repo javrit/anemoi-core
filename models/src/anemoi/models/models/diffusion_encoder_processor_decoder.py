@@ -567,8 +567,6 @@ class AnemoiDiffusionModelEncProcDecUnconditional(AnemoiDiffusionModelEncProcDec
 
         if self.model_config["model"]["condition"] == "mean":
 
-            rank_zero_info("Condition configuration used : [mean]")
-
             assert self.model_config["model"]["condition_files"]["mean_point"] is not None, "self.model_config['model']['condition_files'].mean_point is None"
             assert self.model_config["model"]["condition_files"]["mean_vars"] is not None, "self.model_config['model']['condition_files'].mean_vars is None"
             assert self.model_config["model"]["condition_files"]["std_vars"] is not None, "self.model_config['model']['condition_files'].std_vars is None"
@@ -599,7 +597,6 @@ class AnemoiDiffusionModelEncProcDecUnconditional(AnemoiDiffusionModelEncProcDec
 
             x_zeros = torch.zeros_like(x, dtype= x.dtype, device = x.device)
 
-            rank_zero_info("Condition configuration used : [zero]")
             x_data_latent = torch.cat(
                 (
                     einops.rearrange(x_zeros, "batch time ensemble grid vars -> (batch ensemble grid) (time vars)"),
