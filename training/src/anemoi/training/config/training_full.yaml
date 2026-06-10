@@ -93,6 +93,10 @@ model:
   processor:
     num_layers: 16
   condition: "zero" # configs : "zero", "mean", "mean_3vars" (for overfitting only), orography, orography_3vars (for overfitting only), 
+  condition_files: #files used when using the condition = "mean"
+    mean_point: /project/home/p200177/DE_371/avritj/mean_train_vars_no_tp.npy # mean of each variable on each point (shape = (1 , 1, lat * lon, variables)) ; npy file
+    mean_vars: /project/home/p200177/DE_371/avritj/mean.npy # spatial mean for each variable : shape = (78,) ; npy file
+    std_vars: /project/home/p200177/DE_371/avritj/stdev.npy # spatial std for each variable : shape = (78,) ; npy file 
 
 hardware:
   paths:

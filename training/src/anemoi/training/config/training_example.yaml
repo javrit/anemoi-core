@@ -81,6 +81,10 @@ model:
   processor:
     num_layers: 16
   condition: "mean"  # options: "zero", "mean" ; set to zero if you have not computed the mean, and mean and std as explained in the README
+  condition_files: #files used when using the condition = "mean", 
+    mean_point: ??? # mean of each variable on each point (shape = (1 , 1, lat * lon, variables)) ; npy file
+    mean_vars: ??? # spatial mean of each variable : shape = (78,) ; npy file
+    std_vars: ??? # spatial std of each variable : shape = (78,) ; npy file 
 
 hardware:
   paths:

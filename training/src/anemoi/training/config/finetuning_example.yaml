@@ -77,9 +77,15 @@ model:
     _target_: anemoi.models.models.AnemoiDiffusionModelEncProcDecUnconditional
     diffusion:
       sigma_max: 1000
+      log_normal_mean: -1.2
+      log_normal_std: 1.2
   processor:
     num_layers: 16
-  condition: "mean"
+  condition: "mean"  # options: "zero", "mean" ; set the same as in training
+  condition_files: #files used when using the condition = "mean", set the same as in training
+    mean_point: ??? # mean of each variable on each point (shape = (1 , 1, lat * lon, variables)) ; npy file
+    mean_vars: ??? # spatial mean of each variable : shape = (78,) ; npy file
+    std_vars: ??? # spatial std of each variable : shape = (78,) ; npy file 
 
 hardware:
   paths:

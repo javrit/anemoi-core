@@ -73,13 +73,26 @@ model:
   model:
     _target_: anemoi.models.models.AnemoiDiffusionModelEncProcDecUnconditional
     diffusion:
-      sigma_max: 1000 # <-- to be defined
-  condition: "mean"  # replacing the condition by a constant (mean computed on each point for each variable over the whole training dataset 
+      sigma_max: 1000
+      log_normal_mean: -1.2
+      log_normal_std: 1.2
+  processor:
+    num_layers: 16
+  condition: "mean"  # options: "zero", "mean" ; set to zero if you have not computed the mean, and mean and std as explained in the README
+  condition_files: #files used when using the condition = "mean", 
+    mean_point: ??? # mean of each variable on each point (shape = (1 , 1, lat * lon, variables)) ; npy file
+    mean_vars: ??? # spatial mean of each variable : shape = (78,) ; npy file
+    std_vars: ??? # spatial std of each variable : shape = (78,) ; npy file 
 ```
-
 
 > ⚠️ Do **not** use the standard `AnemoiDiffusionModelEncProcDec` — it expects conditioning inputs that are not provided in the unconditional setup.
 
+
+Two options are available for the condition : mean and zero. 
+
+When using the mean condition, the condition files can be set to zero and the condition (in AnemoiDiffusionModelEncProcDec) is replaced by the normalized mean tensor of each variable. Thus, it is necessary to compute the mean of each variable on each point (file = mean_point), under a npy file. The mean_vars and mean_std files are the mean and std of each variable, computed spatially, and can be found within the zarr dataset.  
+
+When using the zero condition, the condition files can be set to zero and the condition (in AnemoiDiffusionModelEncProcDec) is replaced by a null tensor.
 
 #### 3. Training task — use the unconditional forecaster
 
@@ -93,43 +106,6 @@ training:
 
 
 > ⚠️ Do **not** use `GraphDiffusionForecaster` — it is the conditional variant.
-
-
----
-
-
-
-### Paths to fill in
-
-
-The following paths must be updated to match your environment before launching training.
-
-
-#### Dataset path
-
-
-```yaml
-dataloader:
-  dataset:
-    - dataset: /path/to/your/dataset.zarr   # <-- update this
-```
-
-
-#### Hardware paths
-
-
-```yaml
-hardware:
-  paths:
-    data: /path/to/your/dataset/folder      # <-- update this (folder containing the zarr)
-    output: /path/to/output-dir             # <-- update this (where checkpoints are saved)
-  files:
-    dataset: your-dataset-name.zarr         # <-- update this (filename only, no path)
-    graph: /path/to/graph.pt                # <-- update this
-```
-
-
----
 
 
 A full minimal config example is available at path : ./training/src/anemoi/training/config/training_example.yaml
@@ -152,7 +128,11 @@ training:
   load_weights_only: True
 ```
 
+
 A full minimal config example is available at path : ./training/src/anemoi/training/config/finetuning_example.yaml
+
+---
+
 
 
 ## License
