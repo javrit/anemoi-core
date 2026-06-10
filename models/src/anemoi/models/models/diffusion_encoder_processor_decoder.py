@@ -564,7 +564,7 @@ class AnemoiDiffusionModelEncProcDecUnconditional(AnemoiDiffusionModelEncProcDec
                 node_attributes_data, 0, shard_shapes_dim=grid_shard_shapes, model_comm_group=model_comm_group
             )
             node_attributes_data = shard_tensor(node_attributes_data, 0, shard_shapes_nodes, model_comm_group)
-        
+        print("assmeble input config :", self.model_config)
         if self.model_config["model"]["condition"] == "mean":
 
             rank_zero_info("Condition configuration used : [mean]")
