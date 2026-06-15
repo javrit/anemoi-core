@@ -81,6 +81,7 @@ training:
 A full minimal config example is available at path : ./training/src/anemoi/training/config/training_example.yaml
 
 The configuration used for our experiments is available at path : ./training/src/anemoi/training/config/training_config_used.yaml
+
 ---
 
 ## Finetuning unconditional diffusion model
